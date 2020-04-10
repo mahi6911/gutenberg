@@ -4,7 +4,7 @@
  * External dependencies
  */
 import RCTAztecView from 'react-native-aztec';
-import { View, Platform } from 'react-native';
+import {View, Platform, Button} from 'react-native';
 import { get, pickBy } from 'lodash';
 import memize from 'memize';
 
@@ -33,6 +33,11 @@ import { removeLineSeparator } from '../remove-line-separator';
 import { isCollapsed } from '../is-collapsed';
 import { remove } from '../remove';
 import styles from './style.scss';
+
+import {addMention} from "../../../../../react-native-gutenberg-bridge";
+import {
+	BlockControls,
+} from '@wordpress/block-editor';
 
 const unescapeSpaces = ( text ) => {
 	return text.replace( /&nbsp;|&#160;/gi, ' ' );
@@ -359,6 +364,7 @@ export class RichText extends Component {
 	 * @param {Object} event The paste event which wraps `nativeEvent`.
 	 */
 	onPaste( event ) {
+		console.log(`onPaste`)
 		const { onPaste, onChange } = this.props;
 		const { activeFormats = [] } = this.state;
 
@@ -860,16 +866,51 @@ export class RichText extends Component {
 					selectionColor={ this.props.selectionColor }
 				/>
 				{ isSelected && (
-					<FormatEdit
-						formatTypes={ formatTypes }
-						value={ record }
-						withoutInteractiveFormatting={
-							withoutInteractiveFormatting
-						}
-						onChange={ this.onFormatChange }
-						onFocus={ () => {} }
-					/>
-				) }
+					<>
+						<FormatEdit
+							formatTypes={ formatTypes }
+							value={ record }
+							withoutInteractiveFormatting={
+								withoutInteractiveFormatting
+							}
+							onChange={ this.onFormatChange }
+							onFocus={ () => {} }
+						/>
+
+						<BlockControls>
+							<Button
+								title={ "@" }
+								onPress={ () => {
+									addMention()
+										.then( mentionUserId => {
+											console.log( `value: ${ this.value }` )
+											console.log( `mentioned user id: ${ mentionUserId }` )
+											// FIXME use this.onSelectionChange which wraps this.props.onSelectionChange?
+											const newSelectionEnd = this.selectionEnd + 1 + mentionUserId.length
+											this.selectionEnd += this.props.onSelectionChange(this.selectionStart, newSelectionEnd);
+											console.log(`selectionEnd from ${this.selectionEnd} to ${newSelectionEnd}`)
+											
+											// FIXME mention should be inserted at the cursor location
+											// FIXME need to move the cursor after inserting the mention
+											const newValue = `${ this.value }@${ mentionUserId }`;
+											this.props.onChange(newValue);
+
+											// this.onChange(
+											// 	applyFormat(
+											// 		newValue,
+											//
+											// 	)
+											// )
+											// setAttributes( {
+											// 	value: `${ value }@${ mentionUserId }`
+											// })
+										})
+								}}
+							/>
+						</BlockControls>
+
+					</>
+					) }
 			</View>
 		);
 	}
