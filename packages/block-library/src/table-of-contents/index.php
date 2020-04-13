@@ -35,20 +35,32 @@ function block_core_table_of_contents_get_heading_blocks() {
 function block_core_table_of_contents_blocks_to_heading_list( $heading_blocks ) {
 	return array_map(
 		function ( $heading ) {
-			$level           = $heading['attrs']['level'];
-			$heading_content = $heading['attrs']['content'];
-			$anchor_content  = $heading['attrs']['anchor'];
+			$heading_block_type = WP_Block_Type_Registry::get_instance()
+				->get_registered( 'core/heading' );
+
+			// Apply default values to attributes with no explicit value. There is
+			// currently a bug where attributes set to the same value as the
+			// default are not saved. In this case, the level attribute of the
+			// Heading block is affected, so we have to apply the default values
+			// to get the level value for some of the blocks.
+			$attributes = $heading_block_type->prepare_attributes_for_render(
+				$heading['attrs']
+			);
+
+			$anchor  = $attributes['anchor'];
+			$content = $attributes['content'];
+			$level   = $attributes['level'];
+
+			$anchor = $anchor ? '#' . $anchor : '';
 
 			// Strip html from heading to use as the table of contents entry.
-			$content = $heading_content
-				? wp_strip_all_tags( $heading_content, true )
+			$content = $content
+				? wp_strip_all_tags( $content, true )
 				: '';
 
-			$anchor = $anchor_content ? '#' . $anchor_content : '';
-
 			return array(
-				'content' => $content,
 				'anchor'  => $anchor,
+				'content' => $content,
 				'level'   => $level,
 			);
 		},
