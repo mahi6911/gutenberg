@@ -51,8 +51,6 @@ function block_core_table_of_contents_blocks_to_heading_list( $heading_blocks ) 
 			$content = $attributes['content'];
 			$level   = $attributes['level'];
 
-			$anchor = $anchor ? '#' . $anchor : '';
-
 			// Strip html from heading to use as the table of contents entry.
 			$content = $content
 				? wp_strip_all_tags( $content, true )
@@ -162,7 +160,7 @@ function block_core_table_of_contents_render_list( $nested_heading_list ) {
 
 			$entry = $anchor
 				? sprintf(
-					'<a class="%1$s" href="%2$s">%3$s</a>',
+					'<a class="%1$s" href="#%2$s">%3$s</a>',
 					$item_class,
 					esc_attr( $anchor ),
 					esc_html( $content )
