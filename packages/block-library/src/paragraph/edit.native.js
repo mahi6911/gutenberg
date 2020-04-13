@@ -1,8 +1,6 @@
 /**
  * External dependencies
  */
-// import { fetchRequest } from 'react-native-gutenberg-bridge';
-import { fetchRequest, addMention } from 'react-native-gutenberg-bridge';
 
 /**
  * WordPress dependencies
@@ -14,7 +12,6 @@ import {
 	BlockControls,
 	RichText,
 } from '@wordpress/block-editor';
-import {Button} from "react-native";
 
 const name = 'core/paragraph';
 
@@ -41,18 +38,6 @@ function ParagraphBlock( {
 						setAttributes( { align: nextAlign } );
 					} }
 				/>
-				{/*<Button*/}
-				{/*	title={ "@" }*/}
-				{/*	onPress={ () => {*/}
-				{/*		addMention()*/}
-				{/*			.then( mentionUserId => {*/}
-				{/*				console.log( `mentioned user id: ${ mentionUserId }` )*/}
-				{/*				setAttributes( {*/}
-				{/*					content: `${ content }@${ mentionUserId }`*/}
-				{/*				})*/}
-				{/*			})*/}
-				{/*	}}*/}
-				{/*/>*/}
 			</BlockControls>
 			<RichText
 				identifier="content"

@@ -4,7 +4,7 @@
  * External dependencies
  */
 import RCTAztecView from 'react-native-aztec';
-import {View, Platform, Button} from 'react-native';
+import { View, Platform, Button } from 'react-native';
 import { get, pickBy } from 'lodash';
 import memize from 'memize';
 
@@ -26,6 +26,7 @@ import FormatEdit from './format-edit';
 import { applyFormat } from '../apply-format';
 import { getActiveFormat } from '../get-active-format';
 import { getActiveFormats } from '../get-active-formats';
+import { insert } from '../insert';
 import { isEmpty, isEmptyLine } from '../is-empty';
 import { create } from '../create';
 import { toHTMLString } from '../to-html-string';
@@ -34,10 +35,8 @@ import { isCollapsed } from '../is-collapsed';
 import { remove } from '../remove';
 import styles from './style.scss';
 
-import {addMention} from "../../../../../react-native-gutenberg-bridge";
-import {
-	BlockControls,
-} from '@wordpress/block-editor';
+import { addMention } from '../../../../../react-native-gutenberg-bridge';
+import { BlockControls } from '@wordpress/block-editor';
 
 const unescapeSpaces = ( text ) => {
 	return text.replace( /&nbsp;|&#160;/gi, ' ' );
@@ -91,6 +90,7 @@ export class RichText extends Component {
 		this.valueToFormat = this.valueToFormat.bind( this );
 		this.willTrimSpaces = this.willTrimSpaces.bind( this );
 		this.getHtmlToRender = this.getHtmlToRender.bind( this );
+		this.insertString = this.insertString.bind( this );
 		this.state = {
 			activeFormats: [],
 			selectedFormat: null,
@@ -178,7 +178,6 @@ export class RichText extends Component {
 	}
 
 	onFormatChange( record ) {
-		this.getRecord( record );
 		const { start, end, activeFormats = [] } = record;
 		const changeHandlers = pickBy( this.props, ( v, key ) =>
 			key.startsWith( 'format_on_change_functions_' )
@@ -198,6 +197,13 @@ export class RichText extends Component {
 		this.onCreateUndoLevel();
 
 		this.lastAztecEventType = 'format change';
+	}
+
+	insertString( record, string ) {
+		if ( record && string ) {
+			const toInsert = insert( record, string );
+			this.onFormatChange( toInsert );
+		}
 	}
 
 	onCreateUndoLevel() {
@@ -364,7 +370,6 @@ export class RichText extends Component {
 	 * @param {Object} event The paste event which wraps `nativeEvent`.
 	 */
 	onPaste( event ) {
-		console.log(`onPaste`)
 		const { onPaste, onChange } = this.props;
 		const { activeFormats = [] } = this.state;
 
@@ -879,38 +884,19 @@ export class RichText extends Component {
 
 						<BlockControls>
 							<Button
-								title={ "@" }
+								title={ '@' }
 								onPress={ () => {
-									addMention()
-										.then( mentionUserId => {
-											console.log( `value: ${ this.value }` )
-											console.log( `mentioned user id: ${ mentionUserId }` )
-											// FIXME use this.onSelectionChange which wraps this.props.onSelectionChange?
-											const newSelectionEnd = this.selectionEnd + 1 + mentionUserId.length
-											this.selectionEnd += this.props.onSelectionChange(this.selectionStart, newSelectionEnd);
-											console.log(`selectionEnd from ${this.selectionEnd} to ${newSelectionEnd}`)
-											
-											// FIXME mention should be inserted at the cursor location
-											// FIXME need to move the cursor after inserting the mention
-											const newValue = `${ this.value }@${ mentionUserId }`;
-											this.props.onChange(newValue);
-
-											// this.onChange(
-											// 	applyFormat(
-											// 		newValue,
-											//
-											// 	)
-											// )
-											// setAttributes( {
-											// 	value: `${ value }@${ mentionUserId }`
-											// })
-										})
-								}}
+									addMention().then( ( mentionUserId ) => {
+										this.insertString(
+											record,
+											`@${ mentionUserId }`
+										);
+									} );
+								} }
 							/>
 						</BlockControls>
-
 					</>
-					) }
+				) }
 			</View>
 		);
 	}
